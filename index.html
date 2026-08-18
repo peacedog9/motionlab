@@ -1851,6 +1851,7 @@ function openPreview(type){
     }
     html += '<div class="spread" style="padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-weight:600">' + esc(it.ex.name) + "</span>" +
       "<span>" + (it.locked ? '<span style="color:var(--clay)">' + icon("lock") + "</span>" : "") +
+      (!it.locked && parseDose(it.ex.dose[String(ctx.phase)]).secs ? '<span style="color:var(--sky)" title="Timed hold">' + icon("clock") + "</span>" : "") +
       '<span class="small muted tnum">' + esc(doseLabel(it.ex, ctx)) + "</span></span></div>";
   }
   html += '<div class="rowbtns" style="margin-top:14px"><button class="btn" data-action="closeModal">Close</button>' +
@@ -1875,19 +1876,48 @@ function ensureAudio(){
   try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ AC = null; }
 }
 document.addEventListener("pointerdown", () => { ensureAudio(); if(AC && AC.state === "suspended") AC.resume().catch(() => {}); }, true);
-function beep(){
-  if(!state.settings.sound) return;
+function tone(freq, dur, gain, delay, type){
+  if(!AC) return;
+  const t0 = AC.currentTime + (delay || 0);
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.connect(g); g.connect(AC.destination);
+  o.type = type || "sine"; o.frequency.value = freq;
+  g.gain.setValueAtTime(gain, t0);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+  o.start(t0); o.stop(t0 + dur + 0.02);
+}
+function soundReady(){
+  if(!state.settings.sound) return false;
   try{
     if(!AC) ensureAudio();
-    if(!AC) return;
+    if(!AC) return false;
     if(AC.state === "suspended") AC.resume().catch(() => {});
-    const o = AC.createOscillator(), g = AC.createGain();
-    o.connect(g); g.connect(AC.destination);
-    o.type = "sine"; o.frequency.value = 880;
-    g.gain.setValueAtTime(0.25, AC.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.5);
-    o.start(); o.stop(AC.currentTime + 0.5);
+    return true;
+  }catch(e){ return false; }
+}
+// Short ding: a hold is starting.
+function cueStart(){
+  if(!soundReady()) return;
+  try{ tone(880, 0.12, 0.2); tone(1320, 0.1, 0.12, 0.07); }catch(e){}
+}
+// Countdown blip at 3, 2, 1 seconds left: last stretch, push.
+function cueCount(){
+  if(!soundReady()) return;
+  try{ tone(990, 0.06, 0.22, 0, "square"); }catch(e){}
+}
+// End tone at zero: two notes, lower and longer than the countdown blips.
+function cueEnd(){
+  if(!soundReady()) return;
+  try{ tone(587, 0.18, 0.25); tone(880, 0.45, 0.25, 0.14); }catch(e){}
+}
+// The iPhone mute switch silences WebAudio, so every timer cue is paired
+// with a haptic through the wrapper bridge; vibrate covers the browser.
+function haptic(kind){
+  try{
+    if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.motionLab)
+      window.webkit.messageHandlers.motionLab.postMessage({ kind: kind, sound: !!state.settings.sound });
   }catch(e){}
+  try{ if(navigator.vibrate) navigator.vibrate(kind === "timerDone" ? [70, 50, 70] : 25); }catch(e){}
 }
 
 /* ---------- wake lock ---------- */
@@ -2075,10 +2105,15 @@ function playBody(){
       html += '<div class="ticks"><span class="ticklab">SETS</span>';
       for(let i = 0; i < n; i++) html += tickHtml(it, i, !!arr[i]);
       html += "</div>";
+      // Timed hold on the current card: the timer is the primary action,
+      // not a small chip. Rep cards keep tick circles and no timer.
+      if(isCur && !it.locked && d.secs){
+        html += '<div class="rowbtns" style="margin-top:10px"><button class="btn primary h-start" data-action="setTimer" data-ex="' + ex.id + '" data-secs="' + d.secs + '">' + icon("clock") + " Start " + d.secs + "s hold</button></div>";
+      }
       html += '<div class="ex-tools">';
       html += '<button class="tbtn" data-action="formModal" data-ex="' + ex.id + '">' + icon("form") + " Form</button>";
       html += watchHtml(ex);
-      if(d.secs) html += '<button class="tbtn" data-action="setTimer" data-ex="' + ex.id + '" data-secs="' + d.secs + '">' + icon("clock") + " " + d.secs + "s timer</button>";
+      if(d.secs && !(isCur && !it.locked)) html += '<button class="tbtn" data-action="setTimer" data-ex="' + ex.id + '" data-secs="' + d.secs + '">' + icon("clock") + " " + d.secs + "s timer</button>";
       html += "</div>";
       if(done){
         const mark = P.marks[ex.id];
@@ -2239,7 +2274,7 @@ function showTimer(secs, title, sub, tctx){
   hideTimer();
   const root = $("#ptimer");
   if(!root) return;
-  TMR = { endAt: Date.now() + secs * 1000, total: secs, done: false,
+  TMR = { endAt: Date.now() + secs * 1000, total: secs, done: false, lastCount: secs,
     exId: tctx && tctx.exId, rest: tctx && tctx.rest ? tctx.rest : 0,
     restLabel: tctx && tctx.restLabel ? tctx.restLabel : "" };
   root.hidden = false;
@@ -2250,6 +2285,8 @@ function showTimer(secs, title, sub, tctx){
     '<circle id="pt-ring" cx="100" cy="100" r="88" fill="none" stroke="#C9F24B" stroke-width="6" stroke-linecap="round" stroke-dasharray="552.9" stroke-dashoffset="0"/></svg>' +
     '<div class="rin"><div class="ttime tnum" id="pt-time">' + fmtClock(secs) + "</div></div></div>" +
     '<div class="tbtns"><button class="btn" data-action="timerClose">Close</button></div>';
+  cueStart();
+  haptic("complete");
   TMR.int = setInterval(tickTimer, 200);
   tickTimer();
 }
@@ -2260,10 +2297,16 @@ function tickTimer(){
   const tEl = $("#pt-time"), rEl = $("#pt-ring");
   if(tEl) tEl.textContent = fmtClock(s);
   if(rEl) rEl.setAttribute("stroke-dashoffset", String(552.9 * (1 - rem / (TMR.total * 1000))));
+  if(s < TMR.lastCount && s >= 1 && s <= 3){
+    TMR.lastCount = s;
+    cueCount();
+    haptic("tick");
+  }
   if(rem <= 0 && !TMR.done){
     TMR.done = true;
     clearInterval(TMR.int);
-    beep();
+    cueEnd();
+    haptic("timerDone");
     const root = $("#ptimer");
     if(root){
       root.classList.add("ringdone");
