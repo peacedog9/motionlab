@@ -233,11 +233,14 @@ details.why p{margin:6px 0;font-size:14px;color:#C7CDD6}
 .pfoot-in{max-width:680px;margin:0 auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .restgrp{display:flex;gap:6px;align-items:center}
 .restgrp .rlab{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.restpills .rlab{font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--sky);margin-right:4px}
+.restpills .rbtn{border-color:#2A3A47}
 .rbtn{min-width:58px;min-height:44px;border:1px solid var(--border);border-radius:10px;font-weight:800;font-size:14px;background:#1A2027}
 .contacts{display:flex;flex-direction:column;font-size:12px;font-weight:700;color:var(--muted);line-height:1.3;margin-right:auto}
 .contacts .over{color:var(--clay)}
 
 #ptimer{position:fixed;inset:0;z-index:55;background:rgba(11,13,16,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px}
+#ptimer[hidden]{display:none !important}
 #ptimer .tlab{font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
 #ptimer .ttime{font-size:76px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;letter-spacing:.02em}
 #ptimer.ringdone .ttime{color:var(--volt)}
@@ -2357,12 +2360,15 @@ function playerFooter(){
   const cur = P.items[currentItemIndex()];
   const curEx = cur ? cur.ex : null;
   const curRest = curEx && !cur.locked ? restSeconds(curEx.rest) : 0;
+  // Say the seconds it will actually run: a "Rest 60-90s" button starting
+  // the midpoint reads on the clock as 1:15 and looks like a random number.
   const restMain = curRest > 0
-    ? '<button class="btn primary restmain" data-action="restTimer" data-secs="' + curRest + '">' + icon("clock") + " Rest " + esc(curEx.rest) + "</button>"
+    ? '<button class="btn primary restmain" data-action="restTimer" data-secs="' + curRest + '">' + icon("clock") + " Rest " + curRest + "s</button>"
     : "";
   return '<div class="pfoot"><div class="pfoot-in">' + contactsHtml +
     '<div class="restpills" role="group" aria-label="Rest timers">' +
-    [30,45,60,90,120].map(r => '<button class="rbtn tnum" data-action="restTimer" data-secs="' + r + '">' + r + "</button>").join("") +
+    '<span class="rlab">REST</span>' +
+    [30,45,60,90].map(r => '<button class="rbtn tnum" data-action="restTimer" data-secs="' + r + '">' + r + "</button>").join("") +
     "</div></div>" +
     '<div class="pfoot-in">' + restMain +
     '<button class="btn small ghost" data-action="expandAll">' + (P.expand ? "Focus" : "Overview") + "</button>" +
@@ -2783,7 +2789,7 @@ function completeTimerSet(){
   if(root){
     const wrap = root.querySelector(".tbtns");
     if(wrap){
-      const restTxt = lastRestLabel && lastRestLabel.indexOf("-") > -1 ? "Rest " + lastRestLabel : (lastRest > 0 ? "Rest " + lastRest + "s" : "");
+      const restTxt = lastRest > 0 ? "Rest " + lastRest + "s" : "";
       wrap.innerHTML = (restTxt ? '<button class="btn primary" data-action="timerRest">' + restTxt + "</button>" : "") +
         '<button class="btn" data-action="timerClose">Close</button>';
     }
