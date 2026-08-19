@@ -376,6 +376,41 @@ ul.plain li{margin:5px 0;font-size:14px;color:#C7CDD6}
   .sessmini:active,.btn:active{transform:none}
   .sheet{animation:none}
 }
+/* 6. Large title. iOS leads with the content you are in, not the app's name.
+   The week is the title; identity shrinks to an eyebrow. Collapses on scroll. */
+.lt{padding:2px 0 14px}
+.lt-eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#6E7683;margin-bottom:2px}
+.lt-title{font-size:34px;line-height:1.08;font-weight:800;letter-spacing:-.022em;margin:0}
+.lt-sub{margin-top:4px;color:var(--muted);font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lt.shrunk .lt-title{font-size:22px}
+.lt.shrunk .lt-eyebrow{opacity:0;height:0;margin:0;overflow:hidden}
+.lt-title,.lt-eyebrow{transition:font-size .28s var(--spring),opacity .2s ease}
+@media (prefers-reduced-motion:reduce){.lt-title,.lt-eyebrow{transition:none}}
+
+/* 7. Sentence case. Session and phase names are now sentence case in the data;
+   these rules stop the CSS from shouting them back into caps. Small section
+   eyebrows (PREP / CORE) keep their caps: that use is correct on iOS. */
+.display,.panel-title{text-transform:none;letter-spacing:-.01em}
+.panel-title{font-size:17px;font-weight:700}
+.chip,.lvlchip{text-transform:none;letter-spacing:0;font-weight:600}
+.hero .display{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.sessmini .display{font-size:17px;font-weight:600;letter-spacing:-.01em}
+
+/* 8. Cycle ring. The fitness idiom people already read at a glance. */
+.cyclering{position:relative;width:140px;height:140px;margin:14px auto 4px}
+.crsvg{width:100%;height:100%;display:block}
+.cr-mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.cr-num{font-size:36px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.cr-lab{font-size:11px;color:var(--muted);font-weight:600}
+.cr-side{display:flex;justify-content:center;gap:26px;margin:6px 0 2px}
+.cr-stat{text-align:center}
+.cr-stat-num{font-size:22px;font-weight:800;line-height:1.1;letter-spacing:-.02em}
+.cr-stat-lab{font-size:11px;color:var(--muted);line-height:1.25;margin-top:2px}
+
+/* 9. Volt restraint: the resume card is information, not the primary action.
+   Its Resume button carries the accent instead of the whole card edge. */
+.resumecard{box-shadow:0 0 0 .5px var(--hair), 0 1px 2px rgba(0,0,0,.3)}
+.resumecard .btn[data-action="resumeSession"]{background:var(--volt);color:#0B0D10;font-weight:700}
 /* ================== END APPLE LAYER ================== */
 </style>
 </head>
@@ -390,15 +425,15 @@ ul.plain li{margin:5px 0;font-size:14px;color:#C7CDD6}
 const PROGRAM = {
   "appName": "Richard's Motion Lab",
   "sessions": {
-    "A": { "name": "SQUAT LAB", "tagline": "Reclaim the bottom position", "intent": "Ankles first, then hips, then time at depth. Positions are skills: you earn them by visiting often.", "color": "sky" },
-    "B": { "name": "SPRING", "tagline": "Build the bounce, tendon first", "intent": "Isometrics and landings before jumps. Stop while still bouncy. Tendons adapt slower than muscles: that is why this ramps slowly.", "color": "volt" },
-    "C": { "name": "HINGE + FLOW", "tagline": "Posterior chain and free hips", "intent": "Hinge pattern, hamstring length, hip rotation, spine that moves. This is the session that fixes desk hips and a stiff back.", "color": "sky" },
-    "D": { "name": "MOVE", "tagline": "Power you can carry", "intent": "Throws, swings, carries, crawls. Full-body power that spares the knees while SPRING earns the impact work.", "color": "volt" }
+    "A": { "name": "Squat Lab", "tagline": "Reclaim the bottom position", "intent": "Ankles first, then hips, then time at depth. Positions are skills: you earn them by visiting often.", "color": "sky" },
+    "B": { "name": "Spring", "tagline": "Build the bounce, tendon first", "intent": "Isometrics and landings before jumps. Stop while still bouncy. Tendons adapt slower than muscles: that is why this ramps slowly.", "color": "volt" },
+    "C": { "name": "Hinge + Flow", "tagline": "Posterior chain and free hips", "intent": "Hinge pattern, hamstring length, hip rotation, spine that moves. This is the session that fixes desk hips and a stiff back.", "color": "sky" },
+    "D": { "name": "Move", "tagline": "Power you can carry", "intent": "Throws, swings, carries, crawls. Full-body power that spares the knees while SPRING earns the impact work.", "color": "volt" }
   },
   "phases": {
-    "1": { "name": "OPEN + ARMOR", "weeks": "1-4", "focus": "Acquire range, build tendon capacity with isometrics, learn to land. Feels easy on purpose: tendons and new ranges need patient volume." },
-    "2": { "name": "LOAD THE RANGE", "weeks": "5-8", "focus": "Add load to the new range. Elastic volume grows. Deep positions move from holds to reps." },
-    "3": { "name": "OWN IT", "weeks": "9-12", "focus": "Strength in the full range, sharper elastic work if gates are earned. Then retest and start cycle 2 with a higher floor." }
+    "1": { "name": "Open + Armor", "weeks": "1-4", "focus": "Acquire range, build tendon capacity with isometrics, learn to land. Feels easy on purpose: tendons and new ranges need patient volume." },
+    "2": { "name": "Load the Range", "weeks": "5-8", "focus": "Add load to the new range. Elastic volume grows. Deep positions move from holds to reps." },
+    "3": { "name": "Own It", "weeks": "9-12", "focus": "Strength in the full range, sharper elastic work if gates are earned. Then retest and start cycle 2 with a higher floor." }
   },
   "pairing": [
     "SPRING goes on fresh legs: not the day after heavy squats or deadlifts, and before lifting if same day.",
@@ -979,6 +1014,26 @@ const POSES = {
 };
 POSES.d13 = POSES.a8;
 
+// Activity-style progress ring. frac 0..1 fills the arc; ticks mark the
+// weeks so one completed week still reads, and the current week is marked.
+function progressRing(frac, ticks, done, nowIdx){
+  const R = 52, C = 2 * Math.PI * R, off = C * (1 - Math.max(0, Math.min(1, frac)));
+  let marks = "";
+  for(let i = 1; i <= ticks; i++){
+    const a = (i - 0.5) / ticks * 2 * Math.PI - Math.PI / 2;
+    const r1 = R + 9, r2 = R + 13;
+    const x1 = 70 + Math.cos(a) * r1, y1 = 70 + Math.sin(a) * r1;
+    const x2 = 70 + Math.cos(a) * r2, y2 = 70 + Math.sin(a) * r2;
+    const cur = i === nowIdx;
+    marks += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) +
+      '" stroke="' + (i <= done ? "#C9F24B" : (cur ? "#E9ECF1" : "#2A313B")) + '" stroke-width="' + (cur ? 2.6 : 2) + '" stroke-linecap="round"/>';
+  }
+  return '<svg class="crsvg" viewBox="0 0 140 140" aria-hidden="true">' +
+    '<circle cx="70" cy="70" r="' + R + '" fill="none" stroke="#20262F" stroke-width="12"/>' +
+    '<circle cx="70" cy="70" r="' + R + '" fill="none" stroke="#C9F24B" stroke-width="12" stroke-linecap="round" ' +
+    'stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '" transform="rotate(-90 70 70)"/>' +
+    marks + "</svg>";
+}
 function formSvg(exId){
   const pose = POSES[exId];
   const ex = exById(exId);
@@ -1377,15 +1432,20 @@ function todayView(){
   const w = state.rawWeek, c = cycleNum(w), wi = weekInCycle(w), ph = phaseOf(w), dl = isDeload(w);
   const flag = tendonFlag();
   const doneT = t => state.logs.some(l => l.week === w && l.sessionType === t);
-  let html = '<h1 class="brandline">Richard\'s Motion Lab</h1>';
-  html += '<div class="chrome"><span>CYCLE ' + c + '</span><span class="dnum">WEEK ' + wi + '</span><span>PHASE ' + ph + ": " + esc(PROGRAM.phases[String(ph)].name) + '</span>' + (dl ? '<span class="chip sky">Deload</span>' : "") + "</div>";
+  // iOS large title: the week is the content, the app name is chrome. The
+  // eyebrow carries identity, the title carries where you are, the subtitle
+  // carries the phase. Collapses on scroll (see the scroll handler).
+  let html = '<div class="lt"><div class="lt-eyebrow">Richard\'s Motion Lab</div>' +
+    '<h1 class="lt-title">Week ' + wi + "</h1>" +
+    '<div class="lt-sub">Cycle ' + c + " · Phase " + ph + ": " + esc(PROGRAM.phases[String(ph)].name) +
+    (dl ? ' <span class="chip sky">Deload</span>' : "") + "</div></div>";
   if(flag.flagged){
     html += '<div class="banner amber"><div class="grow"><strong>Tendon flag up</strong>' +
       '<div class="small" style="margin-top:2px">' + esc(flag.reason) + " SPRING holds last week's doses and skips extension jumps until it clears.</div></div></div>";
   }
   if(state.draft && state.draft.type){
     const s = PROGRAM.sessions[state.draft.type];
-    if(s) html += '<div class="card tight" style="border-color:var(--volt)"><div class="spread"><div><strong>Resume ' + esc(s.name) + '?</strong><div class="small muted">Session in progress from ' + esc(fmtShort(state.draft.startedISO || new Date().toISOString())) + '</div></div>' +
+    if(s) html += '<div class="card tight resumecard"><div class="spread"><div><strong>Resume ' + esc(s.name) + '?</strong><div class="small muted">Session in progress from ' + esc(fmtShort(state.draft.startedISO || new Date().toISOString())) + '</div></div>' +
       '<div class="rowbtns"><button class="btn small" data-action="resumeSession">' + icon("play") + ' Resume</button><button class="btn small ghost" data-action="discardDraft">Discard</button></div></div></div>';
   }
   if(!flag.flagged && !tendonThisWeek()){
@@ -1419,7 +1479,7 @@ function todayView(){
       (doneT(t) ? '<span class="r-done">' + icon("check") + "</span>" : '<span class="m-est tnum">' + estMinutes(t, ctxT) + " min</span>") +
       "</button>";
   }
-  html += '<div class="sqpanel"><div class="spread"><strong class="display" style="font-size:13px;letter-spacing:.12em">DEEP SQUAT</strong>' +
+  html += '<div class="sqpanel"><div class="spread"><strong class="panel-title">Deep squat</strong>' +
     '<span class="small muted">target 10cm knee to wall</span></div>';
   const lb = state.benchmarks.length ? state.benchmarks[state.benchmarks.length - 1] : null;
   if(lb){
@@ -1434,15 +1494,15 @@ function todayView(){
   const trio = [["a4","Squat hold"],["a5","Cossack"],["a6","ATG"]];
   html += '<div class="sq-trio">' + trio.map(p => '<span class="chip">' + esc(p[1]) + ' <b class="dnum">L' + getLevel(p[0]) + "</b></span>").join("") + "</div>";
   const ds = depthSecondsThisCycle();
-  html += '<div class="small" style="margin-top:10px">Time at depth this cycle: <b class="dnum">' + Math.round(ds / 60) + " min</b></div>";
   const cycDone = cycleWeeksComplete(c);
-  let cells = "";
-  for(let i = 1; i <= 12; i++){
-    const done = weekComplete((c - 1) * 12 + i);
-    cells += "<i" + (done ? ' class="done' + (i === wi ? " now" : "") + '"' : (i === wi ? ' class="now"' : "")) + "></i>";
-  }
   const tot = weeksCompleted();
-  html += '<div class="arc12">' + cells + '</div><div class="small muted">' + cycDone + " of 12 weeks this cycle" + (tot > 0 ? " · " + tot + " total" : "") + "</div>";
+  // Cycle progress as a ring, which is the fitness idiom people already read
+  // at a glance, with the 12 weeks as ticks around it so a single completed
+  // week is still visible. Replaces the row of small rectangles.
+  html += '<div class="cyclering">' + progressRing(cycDone / 12, 12, cycDone, wi) +
+    '<div class="cr-mid"><div class="cr-num dnum">' + cycDone + '</div><div class="cr-lab">of 12 weeks</div></div></div>' +
+    '<div class="cr-side"><div class="cr-stat"><div class="cr-stat-num dnum">' + Math.round(ds / 60) + '</div><div class="cr-stat-lab">min at depth<br>this cycle</div></div>' +
+    (tot > 0 ? '<div class="cr-stat"><div class="cr-stat-num dnum">' + tot + '</div><div class="cr-stat-lab">weeks<br>all time</div></div>' : "") + "</div>";
   html += '<div id="sq-photos" class="sqphotos"></div></div>';
   return html;
 }
@@ -1994,6 +2054,19 @@ function ensureAudio(){
   if(AC) return;
   try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ AC = null; }
 }
+// Large title collapse: iOS shrinks the title as content scrolls under it.
+// Threshold with hysteresis so it cannot flutter at the boundary.
+(function(){
+  let shrunk = false;
+  const onScroll = () => {
+    const el = document.querySelector(".lt");
+    if(!el) return;
+    const y = window.scrollY || document.documentElement.scrollTop || 0;
+    if(!shrunk && y > 28){ shrunk = true; el.classList.add("shrunk"); }
+    else if(shrunk && y < 12){ shrunk = false; el.classList.remove("shrunk"); }
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+})();
 document.addEventListener("pointerdown", () => { ensureAudio(); if(AC && AC.state === "suspended") AC.resume().catch(() => {}); }, true);
 function tone(freq, dur, gain, delay, type){
   if(!AC) return;
