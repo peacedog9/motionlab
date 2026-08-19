@@ -1842,7 +1842,8 @@ function nvl(v){ return (v == null || v === "") ? "-" : v; }
 
 /* ---------- guide ---------- */
 function guideView(){
-  let html = '<h1 class="brandline">Guide</h1><div class="card">';
+  let html = '<h1 class="brandline">Guide</h1><div class="card">' +
+    '<div class="small muted" style="margin-bottom:8px">Build 2026.08.19c</div>';
   html += '<div class="gsec"><h3>What this is</h3><p>A 12-week movement block, 4 sessions a week, 25 to 60 minutes each, run alongside your normal 4 lifting days. Primary goal: a full deep squat and leg mobility. Secondary: elastic, plyometric and general athletic ability, built conservatively because of knee and tendon history.</p>' +
     "<p><strong>SQUAT LAB</strong> earns the bottom position. <strong>SPRING</strong> builds the bounce tendon first. <strong>HINGE + FLOW</strong> feeds the posterior chain and hips. <strong>MOVE</strong> trains power that spares the knees. Progress is measured with benchmarks every 4 weeks, not felt.</p></div>";
   html += '<div class="gsec"><h3>Form diagrams and video links</h3><p>Every exercise has a simple form diagram: a stick figure with numbered arrows that point at exactly what the cues mean. The numbered list under the figure is the cue list for that exercise. Open it from the Form button during a session, or at the top of any Library entry. Diagrams are drawn by the app itself and work offline.</p>' +
