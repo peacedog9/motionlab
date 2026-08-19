@@ -244,7 +244,7 @@ details.why p{margin:6px 0;font-size:14px;color:#C7CDD6}
 #ptimer .tlab{font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
 #ptimer .ttime{font-size:76px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;letter-spacing:.02em}
 #ptimer.ringdone .ttime{color:var(--volt)}
-#ptimer.compact{inset:auto;top:auto;left:10px;right:10px;bottom:calc(158px + env(safe-area-inset-bottom));z-index:45;background:var(--card);border:1px solid var(--border);border-radius:18px;gap:8px;padding:14px 14px 12px;touch-action:none;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+#ptimer.compact{inset:auto;top:auto;left:10px;right:10px;bottom:calc(158px + env(safe-area-inset-bottom));z-index:52;background:var(--card);border:1px solid var(--border);border-radius:18px;gap:8px;padding:14px 14px 12px;touch-action:none;box-shadow:0 10px 30px rgba(0,0,0,.45)}
 /* 34px keeps "0:45" (about 2.1em of tabular digits) clear of the 124px ring. */
 #ptimer.compact .ttime{font-size:34px}
 #ptimer.compact .ringwrap.small{width:124px;height:124px}
@@ -1843,7 +1843,7 @@ function nvl(v){ return (v == null || v === "") ? "-" : v; }
 /* ---------- guide ---------- */
 function guideView(){
   let html = '<h1 class="brandline">Guide</h1><div class="card">' +
-    '<div class="small muted" style="margin-bottom:8px">Build 2026.08.19c</div>';
+    '<div class="small muted" style="margin-bottom:8px">Build 2026.08.19d</div>';
   html += '<div class="gsec"><h3>What this is</h3><p>A 12-week movement block, 4 sessions a week, 25 to 60 minutes each, run alongside your normal 4 lifting days. Primary goal: a full deep squat and leg mobility. Secondary: elastic, plyometric and general athletic ability, built conservatively because of knee and tendon history.</p>' +
     "<p><strong>SQUAT LAB</strong> earns the bottom position. <strong>SPRING</strong> builds the bounce tendon first. <strong>HINGE + FLOW</strong> feeds the posterior chain and hips. <strong>MOVE</strong> trains power that spares the knees. Progress is measured with benchmarks every 4 weeks, not felt.</p></div>";
   html += '<div class="gsec"><h3>Form diagrams and video links</h3><p>Every exercise has a simple form diagram: a stick figure with numbered arrows that point at exactly what the cues mean. The numbered list under the figure is the cue list for that exercise. Open it from the Form button during a session, or at the top of any Library entry. Diagrams are drawn by the app itself and work offline.</p>' +
@@ -2568,7 +2568,7 @@ function say(text){
     if(v) u.voice = v;
     // Softer: slower and lower than default. A rushed, high-pitched count is
     // what makes the stock voice grating in a quiet gym.
-    u.rate = 0.9; u.pitch = 0.85; u.volume = 0.9;
+    u.rate = 0.85; u.pitch = 0.8; u.volume = 1.0;
     window.speechSynthesis.speak(u);
     return true;
   }catch(e){ return false; }
@@ -2720,7 +2720,10 @@ function tickTimer(){
   if(rEl) rEl.setAttribute("stroke-dashoffset", String(552.9 * (1 - rem / (TMR.total * 1000))));
   if(s < TMR.lastCount && s >= 1 && s <= 3){
     TMR.lastCount = s;
+    // Same treatment as the lead-in: tone guarantees it is heard, the voice
+    // says which second it is. Mid-hold there is no screen-reading.
     cueCount();
+    say(String(s));
     haptic("tick");
   }
   if(rem <= 0 && !TMR.done){
