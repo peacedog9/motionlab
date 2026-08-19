@@ -2093,9 +2093,12 @@ function cueStart(){
   try{ tone(880, 0.12, 0.2); tone(1320, 0.1, 0.12, 0.07); }catch(e){}
 }
 // Countdown blip at 3, 2, 1 seconds left: last stretch, push.
+// Countdown tick at 3, 2, 1: must cut through music and pocket fabric. The
+// first cut was a 60ms square blip that was perceptually swallowed next to
+// the end tone; 140ms sine at higher gain reads as a deliberate tick.
 function cueCount(){
   if(!soundReady()) return;
-  try{ tone(990, 0.06, 0.22, 0, "square"); }catch(e){}
+  try{ tone(1100, 0.14, 0.34); }catch(e){}
 }
 // End tone at zero: two notes, lower and longer than the countdown blips.
 function cueEnd(){
@@ -2440,6 +2443,20 @@ function summaryBody(){
   html += '<div class="rowbtns" style="margin:6px 0 10px"><button class="btn primary" data-action="summaryDone" style="flex:1">Done</button></div>';
   return html;
 }
+// The timer must survive every renderPlayer re-render (ticking a set while
+// resting, jumping to another exercise, the finish steps): it lives OUTSIDE
+// the rebuilt subtree, created once and reused. Rebuilding it in place was
+// how a running timer silently vanished on any tap that re-rendered.
+function ensureTimerRoot(){
+  let el = document.getElementById("ptimer");
+  if(!el){
+    el = document.createElement("div");
+    el.id = "ptimer";
+    el.hidden = true;
+    $("#app").appendChild(el);
+  }
+  return el;
+}
 function renderPlayer(){
   const root = $("#player");
   if(!P){ root.hidden = true; root.innerHTML = ""; return; }
@@ -2451,7 +2468,8 @@ function renderPlayer(){
   else if(P.step === "summary") body = summaryBody();
   let foot = "";
   if(P.step === "play") foot = playerFooter();
-  root.innerHTML = playerHeader() + '<div class="p-in">' + body + "</div>" + foot + '<div id="ptimer" hidden></div>';
+  root.innerHTML = playerHeader() + '<div class="p-in">' + body + "</div>" + foot;
+  ensureTimerRoot();
   if(P.step === "play"){
     const card = root.querySelector(".excard.current") || root.querySelector(".excard");
     if(card){
@@ -2470,6 +2488,7 @@ function renderPlayer(){
 function closePlayer(){
   releaseWakeLock();
   hideTimer();
+  hideLeadIn();
   lastSet = null;
   if(P && P.step === "play"){ state.draft = null; save(); }
   P = null;
@@ -2569,8 +2588,11 @@ function leadStep(){
   const el = $("#pt-lead");
   if(LEAD.n > 0){
     if(el) el.textContent = String(LEAD.n);
-    // Speak the number; tone only if speech is unavailable, so we never double up.
-    if(!say(String(LEAD.n))) cueCount();
+    // Both, always: the tone guarantees audibility even when speech is
+    // silent or slow on a device; the voice adds the meaning. Speech-only
+    // numbers were the "I never hear the 3-2-1" report.
+    cueCount();
+    say(String(LEAD.n));
     haptic("tick");
     LEAD.n--;
   } else {
@@ -3062,13 +3084,25 @@ const actions = {
     toast(state.settings.sound ? "Sound on" : "Sound off");
   },
   playerClose(){
-    if(P && P.step === "play" && anyTicks()){
-      uiConfirm("Discard this session? Ticks will be lost.", "Discard", () => {
+    const timerLive = !!(TMR || LEAD);
+    if(P && P.step === "play" && (anyTicks() || timerLive)){
+      const parts = [];
+      if(anyTicks()) parts.push("ticks will be lost");
+      if(timerLive) parts.push("your running timer will end");
+      uiConfirm("Discard this session? " + parts[0].charAt(0).toUpperCase() + parts[0].slice(1) + (parts[1] ? " and " + parts[1] : "") + ".", "Discard", () => {
         state.draft = null; save(); closePlayer();
       });
     } else closePlayer();
   },
-  finishSession(){ P.step = "finish1"; renderPlayer(); },
+  finishSession(){
+    if(TMR || LEAD){
+      uiConfirm("Finish the session now? Your running timer will end.", "Finish", () => {
+        hideTimer();
+        hideLeadIn();
+        P.step = "finish1"; renderPlayer();
+      });
+    } else { P.step = "finish1"; renderPlayer(); }
+  },
   fin1Next(){ P.step = "finish2"; renderPlayer(); },
   finCancel(){ P.step = "play"; renderPlayer(); },
   finBack(){ P.step = "finish1"; renderPlayer(); },
