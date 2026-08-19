@@ -280,6 +280,103 @@ ul.plain li{margin:5px 0;font-size:14px;color:#C7CDD6}
 .gsec h3{font-size:13px;letter-spacing:.12em;margin:0 0 6px;color:var(--sky)}
 .gsec p{margin:6px 0;font-size:15px;color:#C7CDD6}
 @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+
+/* ==================== APPLE LAYER ====================
+   Additive overrides only. Delete this block to revert exactly.
+   Four moves, in order of how much they change the feel:
+   1. Surfaces: iOS separates content with fill and space, never a 1px stroke.
+      Stroked boxes were the single strongest "this is a web page" tell.
+   2. Materials: real translucency on anything that floats over content.
+   3. Numerals: SF Rounded, which is the face Apple's own fitness surfaces use
+      for metrics. Instantly reads native on a workout screen.
+   4. Restraint: volt is spent on the one primary action, not on every edge. */
+
+:root{
+  --card:#15181E;
+  --card-2:#1B1F26;
+  --hair:rgba(255,255,255,.07);
+  --spring:cubic-bezier(.32,.72,0,1);
+}
+
+/* 1. Surfaces: kill the strokes, separate with elevation and space. */
+.card,.excard,.sessmini{
+  border:1px solid transparent;
+  background:var(--card);
+  box-shadow:0 0 0 .5px var(--hair), 0 1px 2px rgba(0,0,0,.3);
+}
+.hero{
+  border:1px solid transparent;
+  border-left:4px solid var(--volt);
+  box-shadow:0 0 0 .5px var(--hair), 0 6px 20px rgba(0,0,0,.38);
+}
+.btn{border-color:transparent;background:var(--card-2);box-shadow:0 0 0 .5px var(--hair)}
+.btn.primary{box-shadow:0 1px 8px rgba(201,242,75,.22)}
+.chip,.lvlchip{border-color:transparent;box-shadow:0 0 0 .5px var(--hair)}
+
+/* 2. Materials: content should show through anything floating above it. */
+.nav{
+  background:rgba(11,13,16,.72);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  backdrop-filter:saturate(180%) blur(20px);
+  border-top:.5px solid var(--hair);
+}
+.sheet{
+  border:none;
+  background:rgba(24,28,34,.86);
+  -webkit-backdrop-filter:saturate(180%) blur(30px);
+  backdrop-filter:saturate(180%) blur(30px);
+  box-shadow:0 -12px 40px rgba(0,0,0,.5);
+}
+#ptimer:not(.compact){
+  background:rgba(11,13,16,.72);
+  -webkit-backdrop-filter:saturate(180%) blur(28px);
+  backdrop-filter:saturate(180%) blur(28px);
+}
+#ptimer.compact{
+  background:rgba(27,31,38,.88);
+  -webkit-backdrop-filter:saturate(180%) blur(24px);
+  backdrop-filter:saturate(180%) blur(24px);
+  border:none;
+  box-shadow:0 0 0 .5px var(--hair), 0 18px 44px rgba(0,0,0,.55);
+}
+.phead{
+  background:rgba(11,13,16,.72);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:.5px solid var(--hair);
+}
+.pfoot{
+  background:rgba(11,13,16,.76);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  backdrop-filter:saturate(180%) blur(20px);
+  border-top:.5px solid var(--hair);
+}
+
+/* 3. Numerals in SF Rounded: the metric IS the content, so give it the face
+   Apple gives its own. Applies to timers, counters and stats, never to prose. */
+.tnum,.ttime,#pt-lead,.dsq-hero,.bignum{
+  font-family:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+  letter-spacing:0;
+}
+
+/* 4. Restraint and hierarchy. Tab labels follow the iOS convention (sentence
+   case, small, tight), and the brandline stops shouting so the week can lead. */
+.navbtn{text-transform:none;letter-spacing:0;font-size:10.5px;font-weight:600}
+.navbtn.on{color:var(--volt)}
+.brandline{font-size:11px;letter-spacing:.14em;color:#6E7683;font-weight:700;margin-bottom:6px}
+
+/* 5. Motion with physics, not linear fades. Springs on anything that moves,
+   and nothing at all when the system asks for stillness. */
+.sessmini,.excard,.btn,.chip{transition:transform .28s var(--spring),background-color .2s ease,box-shadow .28s var(--spring)}
+.sessmini:active,.btn:active{transform:scale(.975)}
+.excard.current{box-shadow:0 0 0 1px rgba(201,242,75,.5), 0 10px 30px rgba(0,0,0,.45)}
+.sheet{animation:sheetup .42s var(--spring)}
+@media (prefers-reduced-motion:reduce){
+  .sessmini,.excard,.btn,.chip{transition:none}
+  .sessmini:active,.btn:active{transform:none}
+  .sheet{animation:none}
+}
+/* ================== END APPLE LAYER ================== */
 </style>
 </head>
 <body>
