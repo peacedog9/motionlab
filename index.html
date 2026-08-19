@@ -1843,7 +1843,7 @@ function nvl(v){ return (v == null || v === "") ? "-" : v; }
 /* ---------- guide ---------- */
 function guideView(){
   let html = '<h1 class="brandline">Guide</h1><div class="card">' +
-    '<div class="small muted" style="margin-bottom:8px">Build 2026.08.19d</div>';
+    '<div class="small muted" style="margin-bottom:8px">Build 2026.08.19e</div>';
   html += '<div class="gsec"><h3>What this is</h3><p>A 12-week movement block, 4 sessions a week, 25 to 60 minutes each, run alongside your normal 4 lifting days. Primary goal: a full deep squat and leg mobility. Secondary: elastic, plyometric and general athletic ability, built conservatively because of knee and tendon history.</p>' +
     "<p><strong>SQUAT LAB</strong> earns the bottom position. <strong>SPRING</strong> builds the bounce tendon first. <strong>HINGE + FLOW</strong> feeds the posterior chain and hips. <strong>MOVE</strong> trains power that spares the knees. Progress is measured with benchmarks every 4 weeks, not felt.</p></div>";
   html += '<div class="gsec"><h3>Form diagrams and video links</h3><p>Every exercise has a simple form diagram: a stick figure with numbered arrows that point at exactly what the cues mean. The numbered list under the figure is the cue list for that exercise. Open it from the Form button during a session, or at the top of any Library entry. Diagrams are drawn by the app itself and work offline.</p>' +
@@ -1867,6 +1867,7 @@ function guideView(){
   }
   html += "</div>";
   html += '<div class="gsec"><h3>Add to iPhone home screen</h3><p>Open this page in Safari. Tap the Share button, scroll, then tap Add to Home Screen. It then opens full screen like an app, works offline, and keeps all data on the device.</p></div>';
+  html += '<div class="gsec"><h3>The countdown voice</h3><p>The app automatically picks the warmest female voice installed on your phone. The built-in one is harsh; the fix is one download: Settings, Accessibility, Spoken Content, Voices, English, then download <strong>Ava (Enhanced)</strong> or <strong>Zoey (Enhanced)</strong>. The app prefers them automatically, no setup needed here.</p></div>';
   html += '<div class="gsec"><h3>Glossary</h3>' +
     "<p><strong>Iso (isometric):</strong> a hold without movement. Load sits in the tendon and joint with no rep count. The armor tool for knees and achilles.</p>" +
     "<p><strong>Extensive plyo:</strong> small, low-intensity elastic work done for volume: pogos, rope, line hops. Builds the spring with little strain.</p>" +
@@ -2546,10 +2547,10 @@ function pickVoice(){
       // harsh one. Enhanced/Premium variants and Ava/Allison/Nicky are much
       // warmer, so they are preferred and Samantha is the last resort.
       const byName = re => pool.find(v => re.test(v.name || ""));
-      VOICE = byName(/\b(ava|allison|nicky|susan|joelle)\b.*\((enhanced|premium)\)/i)
+      VOICE = byName(/\b(ava|zoey|zoe|allison|nicky|susan|joelle)\b.*\((enhanced|premium)\)/i)
            || byName(/\((enhanced|premium)\)/i)
-           || byName(/\b(ava|allison|nicky|susan|joelle|zoe)\b/i)
-           || byName(/\b(karen|moira|tessa|serena|fiona)\b/i)
+           || byName(/\b(ava|zoey|zoe|allison|nicky|susan|joelle)\b/i)
+           || byName(/\b(karen|moira|tessa|serena|fiona|victoria)\b/i)
            || byName(/female/i)
            || byName(/samantha/i)
            || pool[0] || null;
@@ -2573,12 +2574,15 @@ function say(text){
     return true;
   }catch(e){ return false; }
 }
-function runLeadIn(onGo, info){
+function runLeadIn(onGo, info, opts){
   hideTimer();
   hideLeadIn();
   const root = $("#ptimer");
   if(!root){ onGo(); return; }
-  LEAD = { n: 3, onGo: onGo };
+  // quietNumbers: used when the rest timer's own spoken 3-2-1 just counted
+  // these same seconds. The digits stay on screen; only GO is voiced, so it
+  // never says "three, two, one... three, two, one, GO".
+  LEAD = { n: 3, onGo: onGo, quietNumbers: !!(opts && opts.quietNumbers) };
   root.hidden = false;
   root.classList.remove("ringdone", "compact");
   root.setAttribute("data-action", "leadSkip");
@@ -2597,9 +2601,9 @@ function leadStep(){
     if(el) el.textContent = String(LEAD.n);
     // Both, always: the tone guarantees audibility even when speech is
     // silent or slow on a device; the voice adds the meaning. Speech-only
-    // numbers were the "I never hear the 3-2-1" report.
-    cueCount();
-    say(String(LEAD.n));
+    // numbers were the "I never hear the 3-2-1" report. Except after a
+    // rest, whose own countdown just spoke these seconds.
+    if(!LEAD.quietNumbers){ cueCount(); say(String(LEAD.n)); }
     haptic("tick");
     LEAD.n--;
   } else {
@@ -2750,7 +2754,8 @@ function restFinished(){
       const done = P.ticks[lastSet.exId].filter(Boolean).length;
       const total = plannedTicks(ex, P.ctx);
       runLeadIn(() => startSetTimerNow(lastSet.exId),
-        { title: ex.name, sub: "Set " + Math.min(done + 1, total) + " of " + total });
+        { title: ex.name, sub: "Set " + Math.min(done + 1, total) + " of " + total },
+        { quietNumbers: true });
       return;
     }
   }
