@@ -2346,9 +2346,16 @@ function pickVoice(){
     if(vs && vs.length){
       const en = vs.filter(v => /^en(-|_|$)/i.test(v.lang || ""));
       const pool = en.length ? en : vs;
-      // Prefer the common iOS female voices, else any voice flagged female.
-      VOICE = pool.find(v => /samantha|karen|moira|tessa|serena|allison|ava|susan|zoe/i.test(v.name))
-           || pool.find(v => /female/i.test(v.name))
+      // Voice order matters: iOS ships Samantha as the default and she is the
+      // harsh one. Enhanced/Premium variants and Ava/Allison/Nicky are much
+      // warmer, so they are preferred and Samantha is the last resort.
+      const byName = re => pool.find(v => re.test(v.name || ""));
+      VOICE = byName(/\b(ava|allison|nicky|susan|joelle)\b.*\((enhanced|premium)\)/i)
+           || byName(/\((enhanced|premium)\)/i)
+           || byName(/\b(ava|allison|nicky|susan|joelle|zoe)\b/i)
+           || byName(/\b(karen|moira|tessa|serena|fiona)\b/i)
+           || byName(/female/i)
+           || byName(/samantha/i)
            || pool[0] || null;
       voicePicked = true;
     }
@@ -2363,7 +2370,9 @@ function say(text){
     const u = new SpeechSynthesisUtterance(text);
     const v = pickVoice();
     if(v) u.voice = v;
-    u.rate = 1.05; u.pitch = 1.0; u.volume = 1.0;
+    // Softer: slower and lower than default. A rushed, high-pitched count is
+    // what makes the stock voice grating in a quiet gym.
+    u.rate = 0.9; u.pitch = 0.85; u.volume = 0.9;
     window.speechSynthesis.speak(u);
     return true;
   }catch(e){ return false; }
