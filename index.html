@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0B0D10">
-<title>Richard's Motion Lab</title>
+<title>Motion Lab X</title>
 <style>
 :root{
   --bg:#0B0D10; --card:#14181D; --border:#232A33; --text:#E9ECF1; --muted:#8B93A1;
@@ -426,7 +426,7 @@ ul.plain li{margin:5px 0;font-size:14px;color:#C7CDD6}
 "use strict";
 
 const PROGRAM = {
-  "appName": "Richard's Motion Lab",
+  "appName": "Motion Lab X",
   "sessions": {
     "A": { "name": "Squat Lab", "tagline": "Reclaim the bottom position", "intent": "Ankles first, then hips, then time at depth. Positions are skills: you earn them by visiting often.", "color": "sky" },
     "B": { "name": "Spring", "tagline": "Build the bounce, tendon first", "intent": "Isometrics and landings before jumps. Stop while still bouncy. Tendons adapt slower than muscles: that is why this ramps slowly.", "color": "volt" },
@@ -656,7 +656,8 @@ function bootState(){
 function defaultState(){
   return { version:1, createdAt:new Date().toISOString(), rawWeek:1, timeMode:40,
     levels:{}, solidStreak:{}, g4Passed:false, logs:[], benchmarks:[], tendon:[],
-    settings:{sound:true}, draft:null, liftDays:[], exNotes:{}, photoGuideSeen:false };
+    settings:{sound:true, reminder:{on:false, weekday:2, hour:8}}, draft:null, liftDays:[], exNotes:{},
+    photoGuideSeen:false, onboarded:false };
 }
 function hydrate(st){
   const d = defaultState();
@@ -665,6 +666,8 @@ function hydrate(st){
   out.solidStreak = Object.assign({}, (st && st.solidStreak) || {});
   out.exNotes = Object.assign({}, (st && st.exNotes) || {});
   out.settings = Object.assign({sound:true}, (st && st.settings) || {});
+  out.settings.reminder = Object.assign({on:false, weekday:2, hour:8}, (out.settings && out.settings.reminder) || {});
+  out.onboarded = !!out.onboarded;
   out.logs = Array.isArray(out.logs) ? out.logs : [];
   out.benchmarks = Array.isArray(out.benchmarks) ? out.benchmarks : [];
   out.tendon = Array.isArray(out.tendon) ? out.tendon : [];
@@ -1438,7 +1441,7 @@ function todayView(){
   // iOS large title: the week is the content, the app name is chrome. The
   // eyebrow carries identity, the title carries where you are, the subtitle
   // carries the phase. Collapses on scroll (see the scroll handler).
-  let html = '<div class="lt"><div class="lt-eyebrow">Richard\'s Motion Lab</div>' +
+  let html = '<div class="lt"><div class="lt-eyebrow">Motion Lab X</div>' +
     '<h1 class="lt-title">Week ' + wi + "</h1>" +
     '<div class="lt-sub">Cycle ' + c + " · Phase " + ph + ": " + esc(PROGRAM.phases[String(ph)].name) +
     (dl ? ' <span class="chip sky">Deload</span>' : "") + "</div></div>";
@@ -1843,7 +1846,21 @@ function nvl(v){ return (v == null || v === "") ? "-" : v; }
 /* ---------- guide ---------- */
 function guideView(){
   let html = '<h1 class="brandline">Guide</h1><div class="card">' +
-    '<div class="small muted" style="margin-bottom:8px">Build 2026.08.19e</div>';
+    '<div class="small muted" style="margin-bottom:8px">Build 2026.08.20x</div>';
+  html += '<div class="gsec" style="margin-bottom:10px"><h3 style="margin-top:0">Settings</h3>' +
+    '<div class="rowbtns" style="margin:6px 0 12px"><span class="small muted" style="flex:1">Sound and haptics</span>' +
+    '<button class="btn small" data-action="soundToggleGuide">' + (state.settings.sound ? "Sound on" : "Sound off") + "</button></div>";
+  const r = state.settings.reminder;
+  html += '<div class="rowbtns" style="margin-bottom:' + (r.on ? "10px" : "4px") + '"><span class="small muted" style="flex:1">Weekly check-in reminder</span>' +
+    '<button class="btn small" data-action="reminderOn" data-v="' + (r.on ? 0 : 1) + '">' + (r.on ? "On" : "Off") + "</button></div>";
+  if(r.on){
+    const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    html += '<div class="rowbtns" style="margin-bottom:8px">' + days.map((d, i) =>
+      '<button class="chipbtn' + (r.weekday === i ? " on" : "") + '" data-action="reminderDay" data-v="' + i + '">' + d + "</button>").join("") + "</div>";
+    html += '<div class="rowbtns">' + [8, 12, 18, 20].map(h =>
+      '<button class="chipbtn' + (r.hour === h ? " on" : "") + '" data-action="reminderHour" data-v="' + h + '">' + h + ":00</button>").join("") + "</div>";
+  }
+  html += '<div class="small muted" style="margin-top:6px">Reminders fire from the installed app. The check-in itself lives on Today and Progress.</div></div>';
   html += '<div class="gsec"><h3>What this is</h3><p>A 12-week movement block, 4 sessions a week, 25 to 60 minutes each, run alongside your normal 4 lifting days. Primary goal: a full deep squat and leg mobility. Secondary: elastic, plyometric and general athletic ability, built conservatively because of knee and tendon history.</p>' +
     "<p><strong>SQUAT LAB</strong> earns the bottom position. <strong>SPRING</strong> builds the bounce tendon first. <strong>HINGE + FLOW</strong> feeds the posterior chain and hips. <strong>MOVE</strong> trains power that spares the knees. Progress is measured with benchmarks every 4 weeks, not felt.</p></div>";
   html += '<div class="gsec"><h3>Form diagrams and video links</h3><p>Every exercise has a simple form diagram: a stick figure with numbered arrows that point at exactly what the cues mean. The numbered list under the figure is the cue list for that exercise. Open it from the Form button during a session, or at the top of any Library entry. Diagrams are drawn by the app itself and work offline.</p>' +
@@ -1899,6 +1916,47 @@ function renderModal(){
   if(!modalStack.length){ root.hidden = true; root.innerHTML = ""; return; }
   root.hidden = false;
   root.innerHTML = '<div class="sheet">' + modalStack[modalStack.length - 1] + "</div>";
+}
+
+/* ---------- onboarding (first launch) ----------
+   Three questions, no wall of text, everything changeable later in
+   Guide. Skipped installs (web) still get sensible defaults. */
+let OB = { mode: 40, week: 1, reminder: false, weekday: 2, hour: 8 };
+function obChip(list, cur, action, val, label){
+  return '<button class="chipbtn' + (cur === val ? " on" : "") + '" data-action="' + action + '" data-v="' + val + '">' + label + "</button>";
+}
+function onboardingHtml(){
+  const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  let html = "<h3>Welcome to Motion Lab X</h3>" +
+    '<div class="sub">A 12-week mobility and power block. Three questions and you are training; change anything later in Guide.</div>';
+  html += '<div class="field"><label>Session length</label><div class="rowbtns">' +
+    [25, 40, 60].map(m => obChip(null, OB.mode, "onobMode", m, m + " min")).join("") + "</div></div>";
+  html += '<div class="field"><label>Starting point</label><div class="rowbtns">' +
+    obChip(null, OB.week, "onobWeek", 1, "New (week 1)") +
+    obChip(null, OB.week, "onobWeek", 3, "Returning (week 3)") +
+    obChip(null, OB.week, "onobWeek", 5, "Trained (week 5)") + "</div>" +
+    '<div class="small muted" style="margin-top:4px">Weeks gate the harder work. When in doubt, start lower.</div></div>';
+  html += '<div class="field"><label>Weekly tendon check-in reminder</label><div class="rowbtns">' +
+    obChip(null, OB.reminder, "onobReminder", 0, "Off") +
+    obChip(null, OB.reminder, "onobReminder", 1, "On") + "</div>";
+  if(OB.reminder){
+    html += '<div class="rowbtns" style="margin-top:8px">' +
+      days.map((d, i) => obChip(null, OB.weekday, "onobDay", i, d)).join("") + "</div>" +
+      '<div class="rowbtns" style="margin-top:8px">' +
+      [8, 12, 18, 20].map(h => obChip(null, OB.hour, "onobHour", h, h + ":00")).join("") + "</div>";
+  }
+  html += "</div>";
+  html += '<div class="rowbtns" style="margin-top:6px"><button class="btn primary" style="flex:1" data-action="onboardDone">Start training</button></div>';
+  return html;
+}
+function obRender(){
+  modalStack[modalStack.length - 1] = onboardingHtml();
+  renderModal();
+}
+function showOnboarding(){
+  OB = { mode: state.timeMode, week: state.rawWeek, reminder: !!state.settings.reminder.on,
+    weekday: state.settings.reminder.weekday, hour: state.settings.reminder.hour };
+  openModal(onboardingHtml());
 }
 document.addEventListener("click", e => {
   if(e.target && e.target.id === "modal-root") closeModal();
@@ -2139,6 +2197,18 @@ function haptic(kind){
       window.webkit.messageHandlers.motionLab.postMessage({ kind: kind, sound: !!state.settings.sound });
   }catch(e){}
   try{ if(navigator.vibrate) navigator.vibrate(kind === "timerDone" ? [70, 50, 70] : 25); }catch(e){}
+}
+// The weekly tendon check-in reminder is scheduled natively (browsers
+// cannot fire notifications for an offline page). The page owns the
+// preference; the wrapper owns the UNUserNotificationCenter plumbing.
+function postReminder(){
+  try{
+    if(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.motionLab){
+      const r = state.settings.reminder;
+      window.webkit.messageHandlers.motionLab.postMessage({
+        kind: "reminder", on: !!r.on, weekday: r.weekday, hour: r.hour, sound: !!state.settings.sound });
+    }
+  }catch(e){}
 }
 
 /* ---------- wake lock ---------- */
@@ -2916,6 +2986,29 @@ function doImport(){
 /* ---------- actions ---------- */
 const actions = {
   tab(el){ currentTab = el.dataset.tab; render(); },
+  onobMode(el){ OB.mode = +el.dataset.v; obRender(); },
+  onobWeek(el){ OB.week = +el.dataset.v; obRender(); },
+  onobReminder(el){ OB.reminder = el.dataset.v === "1"; obRender(); },
+  onobDay(el){ OB.weekday = +el.dataset.v; obRender(); },
+  onobHour(el){ OB.hour = +el.dataset.v; obRender(); },
+  onboardDone(){
+    state.timeMode = OB.mode;
+    state.rawWeek = OB.week;
+    state.onboarded = true;
+    state.settings.reminder = { on: OB.reminder, weekday: OB.weekday, hour: OB.hour };
+    save();
+    closeAllModals();
+    postReminder();
+    render();
+    toast("Week " + state.rawWeek + " starts now");
+  },
+  reminderOn(el){
+    state.settings.reminder.on = el.dataset.v === "1";
+    save(); postReminder(); render();
+    if(state.settings.reminder.on && !window.webkit) toast("Reminders need the installed app");
+  },
+  reminderDay(el){ state.settings.reminder.weekday = +el.dataset.v; save(); postReminder(); render(); },
+  reminderHour(el){ state.settings.reminder.hour = +el.dataset.v; save(); postReminder(); render(); },
   recoveryFresh(){
     uiConfirm(bootUncopied.length
       ? "Start fresh with empty storage? Readable copies are saved aside, but the part that could not be read will be replaced."
@@ -3098,6 +3191,11 @@ const actions = {
     el.innerHTML = icon(state.settings.sound ? "sound" : "mute");
     toast(state.settings.sound ? "Sound on" : "Sound off");
   },
+  soundToggleGuide(){
+    state.settings.sound = !state.settings.sound;
+    save(); render();
+    toast(state.settings.sound ? "Sound on" : "Sound off");
+  },
   playerClose(){
     const timerLive = !!(TMR || LEAD);
     if(P && P.step === "play" && (anyTicks() || timerLive)){
@@ -3272,6 +3370,9 @@ document.addEventListener("visibilitychange", () => {
 });
 
 render();
+// First launch: onboarding. Never shown over a blocked boot or an
+// existing training history.
+if(state && !bootBlocked && !state.onboarded && !state.logs.length) showOnboarding();
 </script>
 </body>
 </html>
